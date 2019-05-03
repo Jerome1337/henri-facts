@@ -13,6 +13,11 @@ type facts struct {
 	Facts []string `json:"facts"`
 }
 
+type response struct {
+	ResponseType string `json:"response_type"`
+	Text         string `json:"text"`
+}
+
 func Handle(req []byte) string {
 	rand.Seed(time.Now().UTC().UnixNano())
 
@@ -32,7 +37,14 @@ func Handle(req []byte) string {
 		fmt.Println("Failed to unmarshal JSON:", err)
 	}
 
-	return facts.Facts[randomInt(0, len(facts.Facts))]
+	marshalJSON, _ := json.Marshal(
+		response{
+			"in_channel",
+			facts.Facts[randomInt(0, len(facts.Facts))],
+		},
+	)
+
+	return string(marshalJSON)
 }
 
 func randomInt(min int, max int) int {
