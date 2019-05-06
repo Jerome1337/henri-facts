@@ -1,0 +1,7 @@
+[[constraint]]
+  name = "github.com/openfaas-incubator/go-function-sdk"
+  version = "1.0.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true

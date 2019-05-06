@@ -5,26 +5,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"os"
 	"time"
+
+	"github.com/openfaas-incubator/go-function-sdk"
 )
 
 type facts struct {
 	Facts []string `json:"facts"`
 }
 
-type response struct {
+type slackResponse struct {
 	ResponseType string `json:"response_type"`
 	Text         string `json:"text"`
 }
 
-func Handle(req []byte) string {
+func Handle(req handler.Request) (handler.Response, error) {
+	var err error
+
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	jsonFile, err := os.Open("facts.json")
+	jsonFile, jsonErr := os.Open("facts.json")
 
-	if err != nil {
-		fmt.Println("Failed to open JSON file:", err)
+	if jsonErr != nil {
+		return handler.Response{
+			Body:       []byte(fmt.Sprintf("Failed to open JSON file: %s", jsonErr)),
+			StatusCode: http.StatusInternalServerError,
+		}, err
 	}
 
 	defer jsonFile.Close()
@@ -34,17 +42,26 @@ func Handle(req []byte) string {
 	var facts facts
 
 	if err := json.Unmarshal(byteArray, &facts); err != nil {
-		fmt.Println("Failed to unmarshal JSON:", err)
+		return handler.Response{
+			Body:       []byte(fmt.Sprintf("Failed to unmarshal JSON: %s", err)),
+			StatusCode: http.StatusInternalServerError,
+		}, err
 	}
 
 	marshalJSON, _ := json.Marshal(
-		response{
+		slackResponse{
 			"in_channel",
 			facts.Facts[randomInt(0, len(facts.Facts))],
 		},
 	)
 
-	return string(marshalJSON)
+	return handler.Response{
+		Body: marshalJSON,
+		Header: map[string][]string{
+			"Content-Type": []string{"application/json"},
+		},
+		StatusCode: http.StatusOK,
+	}, err
 }
 
 func randomInt(min int, max int) int {
