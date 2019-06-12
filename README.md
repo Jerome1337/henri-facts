@@ -26,3 +26,16 @@ $ curl https://jerome1337.o6s.io/henri-facts
 ```
 
 > The `response_type` key is necessary when this FAAS is used as a Slack command
+
+## For a funny terminal
+
+Add the following line at the end of your `.bashrc` or `.zshrc`
+
+```bash
+$ cowsay $(curl -s https://jerome1337.o6s.io/henri-facts | jq ".text")
+```
+
+#### Requirements
+
+* cowsay
+* jq
